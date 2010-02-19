@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Class-Path: 
+Vaadin-License-Title: Apache License 2.0
+Implementation-Title: AppletIntegration
+Vaadin-Package-Version: 1
+Vaadin-Widgetsets: org.vaadin.applet.AppletintegrationWidgetset
+Implementation-Version: 1.0.2
+Implementation-Vendor: Sami Ekblad
+
