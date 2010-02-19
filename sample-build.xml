@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This is a sample file taken from Screenshot applet component project. 
+     It will help you to build, package and sign your applet. 
+     Please read through the file before trying to use it. -->
+<project basedir="." default="applet-jar-sign" name="Screenshot">
+	<property environment="env" />
+
+	<!-- compiler options -->
+	<property name="debug.level" value="source,lines,vars" />
+	<property name="target.version" value="5" />
+	<property name="source.version" value="5" />
+
+	<!-- Vaadin applet integration jar and class -->
+	<property name="integrationapplet.class" value="org/vaadin/applet/AbstractVaadinApplet.java" />
+	<property name="integrationapplet.jar" value="appletintegration-1.0.2.jar" />
+	<property name="integrationapplet.jar.path" value="WebContent/WEB-INF/lib/${integrationapplet.jar}" />
+
+	<!-- Applet source files -->
+	<property name="source.dir" value="src" />
+	<property name="source.classes" value="org/vaadin/screenshot/applet/ScreenshotApplet.java" />
+
+	<!-- Output jar name and place  -->
+	<property name="build.dir" value="build" />
+	<property name="output.jar" value="screenshot.jar" />
+	<property name="output.dir" value="src/org/vaadin/screenshot/widgetset/public" />
+
+	<!-- Additional class path entries -->
+	<path id="compile.classpath">
+		<pathelement location="${output.dir}/commons-httpclient-3.1.jar" />
+	</path>
+
+	<!-- Signing options -->
+	<property name="signing.keystore" value="signing/MyKeys.keystore" />
+	<property name="signing.keystore.alias" value="MyApplet" />
+	<property name="signing.keystore.passwd" value="[ADD PASSWORD HERE]" />
+
+	<!-- Initalize build directories -->
+	<target name="init">
+		<mkdir dir="${build.dir}/jar-classes" />
+	</target>
+
+	<!-- Remove all compiled classes -->
+	<target name="clean">
+		<delete dir="${build.dir}/jar-classes" />
+	</target>
+
+	<!-- Compile applet classes -->
+	<target depends="init" name="applet-compile">
+		<echo message="${ant.project.name}: ${ant.file}" />
+		<javac debug="true" debuglevel="${debug.level}" destdir="build/jar-classes" source="${source.version}" target="${target.version}">
+			<src path="${source.dir}" />
+			<classpath refid="compile.classpath" />
+			<classpath location="${integrationapplet.jar.path}" />
+			<include name="${source.classes}" />
+			<include name="${integrationapplet.class}" />
+		</javac>
+	</target>
+
+	<!-- Create applet jar and copy the integration jar -->
+	<target name="applet-jar" depends="applet-compile">
+		<delete file="${output.dir}/${output.jar}" />
+		<jar basedir="${build.dir}/jar-classes/" file="${output.dir}/${output.jar}" duplicate="fail" />
+		<copy file="${integrationapplet.jar.path}" todir="${output.dir}" overwrite="yes" />
+	</target>
+
+	<!-- Sign the applet jar -->
+	<target name="applet-jar-sign" depends="applet-jar">
+		<signjar jar="${output.dir}/${output.jar}" keystore="${signing.keystore}" alias="${signing.keystore.alias}" storepass="${signing.keystore.passwd}" />
+		<signjar jar="${output.dir}/${integrationapplet.jar}" keystore="${signing.keystore}" alias="${signing.keystore.alias}" storepass="${signing.keystore.passwd}" />
+		<verifyjar jar="${output.dir}/${output.jar}" verbose="true" certificates="true" />
+		<verifyjar jar="${output.dir}/${integrationapplet.jar}" verbose="true" certificates="true" />
+	</target>
+
+</project>
