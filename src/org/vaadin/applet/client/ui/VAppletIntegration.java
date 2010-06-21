@@ -35,6 +35,7 @@ public class VAppletIntegration extends HTML implements Paintable {
     public static final String ATTR_APPLET_ARCHIVES = "appletArchives";
     public static final String ATTR_APPLET_PARAM_NAMES = "appletParamNames";
     public static final String ATTR_APPLET_PARAM_VALUES = "appletParamValues";
+    public static final String ATTR_APPLET_CODEBASE = "appletCodebase";
 
     public static final String ATTR_CMD = "cmd";
     public static final String ATTR_CMD_PARAMS = "cmdParams";
@@ -57,6 +58,9 @@ public class VAppletIntegration extends HTML implements Paintable {
     private String[] archives = new String[] {};
     private Map<String, String> appletParameters;
     private String appletSession;
+    private String height = "0";
+    private String width = "0";
+    private String codebase;
 
     /**
      * The constructor should first call super() to initialize the component and
@@ -122,6 +126,25 @@ public class VAppletIntegration extends HTML implements Paintable {
                         "Missing attribute " + ATTR_APPLET_ARCHIVES);
                 return;
             }
+
+            // Allow overriding of the default codebase
+            if (uidl.hasAttribute(ATTR_APPLET_CODEBASE)) {
+                codebase = uidl.getStringAttribute(ATTR_APPLET_CODEBASE);
+            }
+
+            // Width and height if provided
+            if (uidl.hasAttribute("width")) {
+                setWidth(uidl.getStringAttribute("width"));
+            } else {
+                setWidth("0");
+            }
+
+            if (uidl.hasAttribute("height")) {
+                setHeight(uidl.getStringAttribute("height"));
+            } else {
+                setHeight("0");
+            }
+
             archives = uidl.getStringArrayAttribute(ATTR_APPLET_ARCHIVES);
 
             // Applet appletParameters
@@ -248,10 +271,40 @@ public class VAppletIntegration extends HTML implements Paintable {
         }
 
         return "<applet mayscript=\"true\" code=\"" + "" + getAppletClass()
-                + "" + "\" codebase=\"" + GWT.getModuleBaseURL()
-                + "\" width=\"0\" height=\"0\" id=\"" + getAppletId()
-                + "\" name=\"" + getAppletId() + "\" archive=\""
-                + archiveAttribute + "\">" + appletParamStr + "</applet>";
+                + "" + "\" codebase=\"" + getCodebase()
+                + "\" width=\"" + getWidth() + "\" height=\"" + getHeight()
+                + "\" id=\"" + getAppletId() + "\" name=\"" + getAppletId()
+                + "\" archive=\"" + archiveAttribute + "\">" + appletParamStr
+                + "</applet>";
+    }
+
+    /** Get codebase of this applet.
+     * By default the code base points to GWT.getModuleBaseURL().
+     *
+     * @return
+     */
+    private String getCodebase() {
+        return codebase == null? GWT.getModuleBaseURL() : codebase;
+    }
+
+    protected String getHeight() {
+        return height;
+    }
+
+    protected String getWidth() {
+        return width;
+    }
+
+    @Override
+    public void setWidth(String w) {
+        super.setWidth(w);
+        width = w;
+    }
+
+    @Override
+    public void setHeight(String h) {
+        super.setHeight(h);
+        height = h;
     }
 
     /**
