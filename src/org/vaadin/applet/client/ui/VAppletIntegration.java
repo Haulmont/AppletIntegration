@@ -96,6 +96,9 @@ public class VAppletIntegration extends HTML implements Paintable {
         // user interaction later
         this.client = client;
 
+        // Export client reference for applet use
+        exportClientUpdateVariable(client);
+
         // Save the client side identifier (paintable id) for the widget
         paintableId = uidl.getId();
 
@@ -174,8 +177,23 @@ public class VAppletIntegration extends HTML implements Paintable {
         if (cmd != null) {
             execute(cmd, cmdParams);
         }
-
     }
+
+    private native static void exportClientUpdateVariable(ApplicationConnection client) /*-{
+        var c = client;
+        $wnd.vaadin.appletUpdateBooleanVariable = function(pid, variableName, newValue, immediate) {
+            c.@com.vaadin.terminal.gwt.client.ApplicationConnection::updateVariable(Ljava/lang/String;Ljava/lang/String;ZZ)(pid, variableName, newValue, immediate);
+        };
+        $wnd.vaadin.appletUpdateIntVariable = function(pid, variableName, newValue, immediate) {
+            c.@com.vaadin.terminal.gwt.client.ApplicationConnection::updateVariable(Ljava/lang/String;Ljava/lang/String;IZ)(pid, variableName, newValue, immediate);
+        };
+        $wnd.vaadin.appletUpdateDoubleVariable = function(pid, variableName, newValue, immediate) {
+            c.@com.vaadin.terminal.gwt.client.ApplicationConnection::updateVariable(Ljava/lang/String;Ljava/lang/String;DZ)(pid, variableName, newValue, immediate);
+        };
+        $wnd.vaadin.appletUpdateStringVariable = function(pid, variableName, newValue, immediate) {
+            c.@com.vaadin.terminal.gwt.client.ApplicationConnection::updateVariable(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)(pid, variableName, newValue, immediate);
+        };
+    }-*/;
 
     /**
      * Execute a command in applet using AbstractVaadinApplet.execute method.

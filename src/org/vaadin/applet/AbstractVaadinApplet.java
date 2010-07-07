@@ -29,6 +29,8 @@ public abstract class AbstractVaadinApplet extends Applet {
     protected static final String PARAM_PAINTABLE_ID = "paintableId";
     protected static final String PARAM_APP_DEBUG = "appDebug";
 
+    protected static long MAX_JS_WAIT_TIME = 10000;
+
     private boolean debug = false;
 
     private JsPollerThread pollerThread;
@@ -164,17 +166,91 @@ public abstract class AbstractVaadinApplet extends Applet {
      *
      */
     public void vaadinSync() {
-        jsCall("vaadin.forceSync()");
+        jsCallAsync("vaadin.forceSync()");
     }
 
     /**
-     * Execute a JavaScript.
+     * Invokes vaadin.appletUpdateVariable sends a variable to server.
+     *
+     * @param variableName
+     * @param newValue
+     * @param immediate
+     */
+    public void vaadinUpdateVariable(String variableName, boolean newValue,
+            boolean immediate) {
+        jsCallAsync("vaadin.appletUpdateBooleanVariable('" + getPaintableId()
+                + "','" + variableName + "'," + newValue + "," + immediate
+                + ")");
+    }
+
+    /**
+     * Invokes vaadin.appletUpdateVariable sends a variable to server.
+     *
+     * @param variableName
+     * @param newValue
+     * @param immediate
+     */
+    public void vaadinUpdateVariable(String variableName, int newValue,
+            boolean immediate) {
+        jsCallAsync("vaadin.appletUpdateIntVariable('" + getPaintableId()
+                + "','" + variableName + "'," + newValue + "," + immediate
+                + ")");
+    }
+
+    /**
+     * Invokes vaadin.appletUpdateVariable sends a variable to server.
+     *
+     * @param variableName
+     * @param newValue
+     * @param immediate
+     */
+    public void vaadinUpdateVariable(String variableName, double newValue,
+            boolean immediate) {
+        jsCallAsync("vaadin.appletUpdateDoubleVariable('" + getPaintableId()
+                + "','" + variableName + "'," + newValue + "," + immediate
+                + ")");
+    }
+
+    /**
+     * Invokes vaadin.appletUpdateVariable sends a variable to server.
+     *
+     * @param variableName
+     * @param newValue
+     * @param immediate
+     */
+    public void vaadinUpdateVariable(String variableName, String newValue,
+            boolean immediate) {
+        jsCallAsync("vaadin.appletUpdateStringVariable('" + getPaintableId()
+                + "','" + variableName + "','" + newValue + "'," + immediate
+                + ")");
+    }
+
+    /*
+     * TODO: Variable support missing for: String[], Object[], long, float,
+     * Map<String,Object>, Paintable
+     */
+
+    /**
+     * Execute a JavaScript asynchronously.
      *
      * @param command
      */
-    public void jsCall(String command) {
+    public void jsCallAsync(String command) {
         JSCallThread t = new JSCallThread(command);
         t.start();
+    }
+
+    /**
+     * Execute a JavaScript synchronously.
+     *
+     * @param command
+     * @throws InterruptedException
+     */
+    public Object jsCallSync(String command) throws InterruptedException {
+        JSCallThread t = new JSCallThread(command);
+        t.start();
+        t.join(MAX_JS_WAIT_TIME);
+        return t.getResult();
     }
 
     /**
@@ -277,8 +353,7 @@ public abstract class AbstractVaadinApplet extends Applet {
                         new Object[] { AbstractVaadinApplet.this });
 
                 // Invoke the command
-                Object result = evalMethod
-                        .invoke(jsWin, new Object[] { jscmd });
+                result = evalMethod.invoke(jsWin, new Object[] { jscmd });
 
                 if (!(result instanceof String) && result != null) {
                     result = result.toString();
@@ -380,7 +455,7 @@ public abstract class AbstractVaadinApplet extends Applet {
      */
     public void execute(String command, Object[] params) {
         if (pollerThread == null) {
-            debug("Poller thread stopped. Cannot execute: '" + command+"'");
+            debug("Poller thread stopped. Cannot execute: '" + command + "'");
             return;
         }
         synchronized (pollerLock) {

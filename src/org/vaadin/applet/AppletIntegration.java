@@ -22,6 +22,7 @@ public class AppletIntegration extends AbstractComponent {
     private static final long serialVersionUID = 6061722679712017720L;
 
     private String appletClass = null;
+    private String codebase;
     private List<String> appletArchives = null;
     private Map<String, String> appletParams = null;
 
@@ -49,6 +50,11 @@ public class AppletIntegration extends AbstractComponent {
         if (appletArchives != null) {
             target.addAttribute(VAppletIntegration.ATTR_APPLET_ARCHIVES,
                     appletArchives.toArray(new String[appletArchives.size()]));
+        }
+
+        // Applet codebase
+        if (codebase != null) {
+            target.addAttribute(VAppletIntegration.ATTR_APPLET_CODEBASE,codebase);
         }
 
         // Applet parameters
@@ -201,6 +207,31 @@ public class AppletIntegration extends AbstractComponent {
      */
     protected Map<String, String> getAppletParams() {
         return Collections.unmodifiableMap(appletParams);
+    }
+
+    /**
+     * Set the codebase attribute for the applet.
+     *
+     * By default the codebase points to GWT modulepath, but this can be
+     * overrided by setting it explicitly.
+     *
+     * @param codebase
+     */
+    public void setCodebase(String codebase) {
+        this.codebase = codebase;
+    }
+
+    /**
+     * Set the codebase attribute for the applet.
+     *
+     * By default the codebase points to GWT modulepath, but this can be
+     * overrided by setting it explicitly.
+     *
+     * @see #setCodebase(String)
+     * @return codebase
+     */
+    public String getCodebase() {
+        return codebase;
     }
 
 }
