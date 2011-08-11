@@ -3,6 +3,9 @@ package org.vaadin.applet;
 import java.applet.Applet;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Locale;
+
+import com.vaadin.terminal.StreamVariable;
 
 /**
  * This class can be used as base to implement Java Applets that integrate to
@@ -28,6 +31,7 @@ public abstract class AbstractVaadinApplet extends Applet {
     protected static final String PARAM_APPLET_ID = "appletId";
     protected static final String PARAM_PAINTABLE_ID = "paintableId";
     protected static final String PARAM_APP_DEBUG = "appDebug";
+    protected static final String PARAM_ACTION_URL = "actionUrl";
 
     protected static long MAX_JS_WAIT_TIME = 10000;
 
@@ -47,6 +51,8 @@ public abstract class AbstractVaadinApplet extends Applet {
 
     private String appletId;
 
+    private String actionUrl;
+
     @Override
     public void init() {
         setDebug("true".equals(getParameter(PARAM_APP_DEBUG)));
@@ -54,10 +60,30 @@ public abstract class AbstractVaadinApplet extends Applet {
         setPaintableId(getParameter(PARAM_PAINTABLE_ID));
         setApplicationURL(getParameter(PARAM_APP_URL));
         setApplicationSessionCookie(getParameter(PARAM_APP_SESSION));
+        setAction(getParameter(PARAM_ACTION_URL));
 
         // Start the poller thread for JS commands
         pollerThread = new JsPollerThread();
         pollerThread.start();
+    }
+
+    private void setAction(String submitAction) {
+        actionUrl = submitAction;
+        debug("actionUrl=" + submitAction);
+    }
+
+    /**
+     * Get the submit actionUrl.
+     *
+     * Submit actionUrl can be used to post multipart data
+     * back to the Vaadin server-side application.
+     *
+     * Note: This is not by the AppletIntegration automatically. It must be subclassed and a variable named "actionUrl" must be added to paintContent pointing to the {@link StreamVariable}.
+     *
+     * @return
+     */
+    protected String getActionUrl() {
+        return actionUrl;
     }
 
     /**
@@ -162,7 +188,8 @@ public abstract class AbstractVaadinApplet extends Applet {
 
     /**
      * Invokes vaadin.forceSync that synchronizes the client-side GWT
-     * application with server.
+     * application with server. This is an asynchronous method call that returns
+     * immediately.
      *
      */
     public void vaadinSync() {
@@ -178,9 +205,10 @@ public abstract class AbstractVaadinApplet extends Applet {
      */
     public void vaadinUpdateVariable(String variableName, boolean newValue,
             boolean immediate) {
-        jsCallAsync("vaadin.appletUpdateBooleanVariable('" + getPaintableId()
+        String cmd = "vaadin.appletUpdateBooleanVariable('" + getPaintableId()
                 + "','" + variableName + "'," + newValue + "," + immediate
-                + ")");
+                + ")";
+        jsCall(cmd);
     }
 
     /**
@@ -192,9 +220,10 @@ public abstract class AbstractVaadinApplet extends Applet {
      */
     public void vaadinUpdateVariable(String variableName, int newValue,
             boolean immediate) {
-        jsCallAsync("vaadin.appletUpdateIntVariable('" + getPaintableId()
+        String cmd = "vaadin.appletUpdateIntVariable('" + getPaintableId()
                 + "','" + variableName + "'," + newValue + "," + immediate
-                + ")");
+                + ")";
+        jsCall(cmd);
     }
 
     /**
@@ -206,9 +235,10 @@ public abstract class AbstractVaadinApplet extends Applet {
      */
     public void vaadinUpdateVariable(String variableName, double newValue,
             boolean immediate) {
-        jsCallAsync("vaadin.appletUpdateDoubleVariable('" + getPaintableId()
+        String cmd = "vaadin.appletUpdateDoubleVariable('" + getPaintableId()
                 + "','" + variableName + "'," + newValue + "," + immediate
-                + ")");
+                + ")";
+        jsCall(cmd);
     }
 
     /**
@@ -220,9 +250,11 @@ public abstract class AbstractVaadinApplet extends Applet {
      */
     public void vaadinUpdateVariable(String variableName, String newValue,
             boolean immediate) {
-        jsCallAsync("vaadin.appletUpdateStringVariable('" + getPaintableId()
+        newValue = escapeJavaScript(newValue);
+        String cmd = "vaadin.appletUpdateStringVariable('" + getPaintableId()
                 + "','" + variableName + "','" + newValue + "'," + immediate
-                + ")");
+                + ")";
+        jsCall(cmd);
     }
 
     /*
@@ -231,7 +263,23 @@ public abstract class AbstractVaadinApplet extends Applet {
      */
 
     /**
-     * Execute a JavaScript asynchronously.
+     * Helper to call synchronously JavaScript and wrap the InterruptedException
+     * to a RuntimeException. If special handling for timeouts is needed the
+     * {@link RuntimeException} should be catched.
+     */
+    private Object jsCall(String cmd) {
+        try {
+            return jsCallSync(cmd);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(
+                    "Synchronous JavaScript call timed out.", e);
+        }
+    }
+
+    /**
+     * Execute a JavaScript asynchronously. Note that this return immediately
+     * and JavaScript timing problems may occur if called sequentially multiple
+     * times.
      *
      * @param command
      */
@@ -477,4 +525,135 @@ public abstract class AbstractVaadinApplet extends Applet {
      */
     protected abstract void doExecute(String command, Object[] params);
 
+    /*
+     * --- Following methods are copied from
+     * org.apache.commons.lang.StringEscapeUtils under Apache 2.0 license--
+     */
+
+    /**
+     * <p>
+     * Escapes the characters in a <code>String</code> using JavaScript String
+     * rules.
+     * </p>
+     * <p>
+     * Escapes any values it finds into their JavaScript String form. Deals
+     * correctly with quotes and control-chars (tab, backslash, cr, ff, etc.)
+     * </p>
+     *
+     * <p>
+     * So a tab becomes the characters <code>'\\'</code> and <code>'t'</code>.
+     * </p>
+     *
+     * <p>
+     * The only difference between Java strings and JavaScript strings is that
+     * in JavaScript, a single quote must be escaped.
+     * </p>
+     *
+     * <p>
+     * Example:
+     *
+     * <pre>
+     * input string: He didn't say, "Stop!"
+     * output string: He didn\'t say, \"Stop!\"
+     * </pre>
+     *
+     * </p>
+     *
+     * @param str
+     *            String to escape values in, may be null
+     * @return String with escaped values, <code>null</code> if null string
+     *         input
+     */
+    public static String escapeJavaScript(String str) {
+        if (str == null) {
+            return null;
+        }
+
+        StringBuffer writer = new StringBuffer(str.length() * 2);
+
+        int sz = str.length();
+        for (int i = 0; i < sz; i++) {
+            char ch = str.charAt(i);
+
+            // handle unicode
+            if (ch > 0xfff) {
+                writer.append("\\u");
+                writer.append(hex(ch));
+            } else if (ch > 0xff) {
+                writer.append("\\u0");
+                writer.append(hex(ch));
+            } else if (ch > 0x7f) {
+                writer.append("\\u00");
+                writer.append(hex(ch));
+            } else if (ch < 32) {
+                switch (ch) {
+                case '\b':
+                    writer.append('\\');
+                    writer.append('b');
+                    break;
+                case '\n':
+                    writer.append('\\');
+                    writer.append('n');
+                    break;
+                case '\t':
+                    writer.append('\\');
+                    writer.append('t');
+                    break;
+                case '\f':
+                    writer.append('\\');
+                    writer.append('f');
+                    break;
+                case '\r':
+                    writer.append('\\');
+                    writer.append('r');
+                    break;
+                default:
+                    if (ch > 0xf) {
+                        writer.append("\\u00");
+                        writer.append(hex(ch));
+                    } else {
+                        writer.append("\\u000");
+                        writer.append(hex(ch));
+                    }
+                    break;
+                }
+            } else {
+                switch (ch) {
+                case '\'':
+                    // If we wanted to escape for Java strings then we would
+                    // not need this next line.
+                    writer.append('\\');
+                    writer.append('\'');
+                    break;
+                case '"':
+                    writer.append('\\');
+                    writer.append('"');
+                    break;
+                case '\\':
+                    writer.append('\\');
+                    writer.append('\\');
+                    break;
+                default:
+                    writer.append(ch);
+                    break;
+                }
+            }
+        }
+
+        return writer.toString();
+    }
+
+    /**
+     * <p>
+     * Returns an upper case hexadecimal <code>String</code> for the given
+     * character.
+     * </p>
+     *
+     * @param ch
+     *            The character to convert.
+     * @return An upper case hexadecimal <code>String</code>
+     */
+    private static String hex(char ch) {
+        return Integer.toHexString(ch).toUpperCase(Locale.ENGLISH);
+    }
 }

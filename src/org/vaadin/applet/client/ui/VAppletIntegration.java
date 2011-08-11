@@ -9,9 +9,11 @@ import java.util.Set;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.ui.HTML;
+import com.vaadin.terminal.gwt.client.ApplicationConfiguration;
 import com.vaadin.terminal.gwt.client.ApplicationConnection;
 import com.vaadin.terminal.gwt.client.Paintable;
 import com.vaadin.terminal.gwt.client.UIDL;
+import com.vaadin.terminal.gwt.client.VConsole;
 import com.vaadin.terminal.gwt.client.ValueMap;
 
 /**
@@ -28,6 +30,7 @@ public class VAppletIntegration extends HTML implements Paintable {
     protected static final String PARAM_APP_DEBUG = "appDebug";
     protected static final String PARAM_PAINTABLE_ID = "paintableId";
     protected static final String PARAM_APPLET_ID = "appletId";
+    protected static final String PARAM_ACTION_URL = "actionUrl";
 
     /** Client-server communication attributes. */
     public static final String ATTR_APPLET_SESSION = "appletSession";
@@ -36,6 +39,8 @@ public class VAppletIntegration extends HTML implements Paintable {
     public static final String ATTR_APPLET_PARAM_NAMES = "appletParamNames";
     public static final String ATTR_APPLET_PARAM_VALUES = "appletParamValues";
     public static final String ATTR_APPLET_CODEBASE = "appletCodebase";
+    public static final String ATTR_APPLET_NAME = "appletName";
+    public static final String ATTR_APPLET_ACTION = "action";
 
     public static final String ATTR_CMD = "cmd";
     public static final String ATTR_CMD_PARAMS = "cmdParams";
@@ -52,6 +57,9 @@ public class VAppletIntegration extends HTML implements Paintable {
     /** Generated applet id. Unique across the application. */
     private String appletId;
 
+    /** Applet name. Initially same as appletId, but can be set by application */
+    private String appletName;
+
     /** Has the applet been initialized. Applet is initialized only once. */
     private boolean appletInitialized;
     private String appletClass;
@@ -61,6 +69,7 @@ public class VAppletIntegration extends HTML implements Paintable {
     private String height = "0";
     private String width = "0";
     private String codebase;
+    private String action;
 
     /**
      * The constructor should first call super() to initialize the component and
@@ -73,6 +82,7 @@ public class VAppletIntegration extends HTML implements Paintable {
 
         // Temporary applet id. Should not be needed.
         appletId = CLASSNAME;
+        appletName = null;
 
         // This method call of the Paintable interface sets the component
         // style name in DOM tree
@@ -103,30 +113,38 @@ public class VAppletIntegration extends HTML implements Paintable {
         paintableId = uidl.getId();
 
         appletId = CLASSNAME + paintableId;
+        if (appletName == null) {
+            appletName = appletId;
+        }
 
         // Create the Java applet using HTML
         if (!appletInitialized) {
 
             // Applet class
             if (!uidl.hasAttribute(ATTR_APPLET_CLASS)) {
-                ApplicationConnection.getConsole().log(
-                        "Missing attribute " + ATTR_APPLET_CLASS);
+                VConsole.log("Missing attribute " + ATTR_APPLET_CLASS);
                 return;
             }
             appletClass = uidl.getStringAttribute(ATTR_APPLET_CLASS);
 
             // Applet session
             if (!uidl.hasAttribute(ATTR_APPLET_SESSION)) {
-                ApplicationConnection.getConsole().log(
-                        "Missing attribute " + ATTR_APPLET_SESSION);
+                VConsole.log("Missing attribute " + ATTR_APPLET_SESSION);
                 return;
             }
             appletSession = uidl.getStringAttribute(ATTR_APPLET_SESSION);
 
+            // Applet name (default to id)
+            if (uidl.hasAttribute(ATTR_APPLET_NAME)) {
+                appletName = uidl.getStringAttribute(ATTR_APPLET_NAME);
+            }
+            if (appletName == null) {
+                appletName = appletId;
+            }
+
             // Applet archives
             if (!uidl.hasAttribute(ATTR_APPLET_ARCHIVES)) {
-                ApplicationConnection.getConsole().log(
-                        "Missing attribute " + ATTR_APPLET_ARCHIVES);
+                VConsole.log("Missing attribute " + ATTR_APPLET_ARCHIVES);
                 return;
             }
 
@@ -146,6 +164,12 @@ public class VAppletIntegration extends HTML implements Paintable {
                 setHeight(uidl.getStringAttribute("height"));
             } else {
                 setHeight("0");
+            }
+
+            if (uidl.hasVariable(ATTR_APPLET_ACTION)) {
+                action = client.translateVaadinUri(uidl.getStringVariable(ATTR_APPLET_ACTION));
+            } else {
+                action = "";
             }
 
             archives = uidl.getStringArrayAttribute(ATTR_APPLET_ARCHIVES);
@@ -179,21 +203,22 @@ public class VAppletIntegration extends HTML implements Paintable {
         }
     }
 
-    private native static void exportClientUpdateVariable(ApplicationConnection client) /*-{
-        var c = client;
-        $wnd.vaadin.appletUpdateBooleanVariable = function(pid, variableName, newValue, immediate) {
-            c.@com.vaadin.terminal.gwt.client.ApplicationConnection::updateVariable(Ljava/lang/String;Ljava/lang/String;ZZ)(pid, variableName, newValue, immediate);
-        };
-        $wnd.vaadin.appletUpdateIntVariable = function(pid, variableName, newValue, immediate) {
-            c.@com.vaadin.terminal.gwt.client.ApplicationConnection::updateVariable(Ljava/lang/String;Ljava/lang/String;IZ)(pid, variableName, newValue, immediate);
-        };
-        $wnd.vaadin.appletUpdateDoubleVariable = function(pid, variableName, newValue, immediate) {
-            c.@com.vaadin.terminal.gwt.client.ApplicationConnection::updateVariable(Ljava/lang/String;Ljava/lang/String;DZ)(pid, variableName, newValue, immediate);
-        };
-        $wnd.vaadin.appletUpdateStringVariable = function(pid, variableName, newValue, immediate) {
-            c.@com.vaadin.terminal.gwt.client.ApplicationConnection::updateVariable(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)(pid, variableName, newValue, immediate);
-        };
-    }-*/;
+    private native static void exportClientUpdateVariable(
+            ApplicationConnection client) /*-{
+                                          var c = client;
+                                          $wnd.vaadin.appletUpdateBooleanVariable = function(pid, variableName, newValue, immediate) {
+                                          c.@com.vaadin.terminal.gwt.client.ApplicationConnection::updateVariable(Ljava/lang/String;Ljava/lang/String;ZZ)(pid, variableName, newValue, immediate);
+                                          };
+                                          $wnd.vaadin.appletUpdateIntVariable = function(pid, variableName, newValue, immediate) {
+                                          c.@com.vaadin.terminal.gwt.client.ApplicationConnection::updateVariable(Ljava/lang/String;Ljava/lang/String;IZ)(pid, variableName, newValue, immediate);
+                                          };
+                                          $wnd.vaadin.appletUpdateDoubleVariable = function(pid, variableName, newValue, immediate) {
+                                          c.@com.vaadin.terminal.gwt.client.ApplicationConnection::updateVariable(Ljava/lang/String;Ljava/lang/String;DZ)(pid, variableName, newValue, immediate);
+                                          };
+                                          $wnd.vaadin.appletUpdateStringVariable = function(pid, variableName, newValue, immediate) {
+                                          c.@com.vaadin.terminal.gwt.client.ApplicationConnection::updateVariable(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)(pid, variableName, newValue, immediate);
+                                          };
+                                          }-*/;
 
     /**
      * Execute a command in applet using AbstractVaadinApplet.execute method.
@@ -203,9 +228,8 @@ public class VAppletIntegration extends HTML implements Paintable {
      * @param cmdParams
      */
     public void execute(String cmd, String[] cmdParams) {
-        ApplicationConnection.getConsole().log(
-                "Applet command: " + getAppletId() + ",'" + cmd + "','"
-                        + cmdParams + "'");
+        VConsole.log("Applet command: " + getAppletId() + ",'" + cmd + "','"
+                + cmdParams + "'");
         if (cmdParams != null && cmdParams.length > 0) {
             internalAppletExecute(getAppletId(), cmd, cmdParams);
         } else {
@@ -289,20 +313,21 @@ public class VAppletIntegration extends HTML implements Paintable {
         }
 
         return "<applet mayscript=\"true\" code=\"" + "" + getAppletClass()
-                + "" + "\" codebase=\"" + getCodebase()
-                + "\" width=\"" + getWidth() + "\" height=\"" + getHeight()
-                + "\" id=\"" + getAppletId() + "\" name=\"" + getAppletId()
+                + "" + "\" codebase=\"" + getCodebase() + "\" width=\""
+                + getWidth() + "\" height=\"" + getHeight() + "\" id=\""
+                + getAppletId() + "\" name=\"" + getAppletName()
                 + "\" archive=\"" + archiveAttribute + "\">" + appletParamStr
                 + "</applet>";
     }
 
-    /** Get codebase of this applet.
-     * By default the code base points to GWT.getModuleBaseURL().
+    /**
+     * Get codebase of this applet. By default the code base points to
+     * GWT.getModuleBaseURL().
      *
      * @return
      */
     private String getCodebase() {
-        return codebase == null? GWT.getModuleBaseURL() : codebase;
+        return codebase == null ? GWT.getModuleBaseURL() : codebase;
     }
 
     protected String getHeight() {
@@ -344,6 +369,15 @@ public class VAppletIntegration extends HTML implements Paintable {
     }
 
     /**
+     * Get name for this applet.
+     *
+     * @return
+     */
+    protected String getAppletName() {
+        return appletName;
+    }
+
+    /**
      * Get list of archives needed to run the applet.
      *
      * @return
@@ -382,10 +416,15 @@ public class VAppletIntegration extends HTML implements Paintable {
             sessionId = Cookies.getCookie("JSESSIONID");
         }
         res.put(PARAM_APP_SESSION, "JSESSIONID=" + sessionId);
-        res.put(PARAM_APP_DEBUG, ApplicationConnection.isDebugMode() ? "true"
-                : "false");
-        res.put(PARAM_APP_URL, GWT.getHostPageBaseURL() + client.getAppUri());
+        res.put(PARAM_APP_DEBUG,
+                ApplicationConfiguration.isDebugMode() ? "true" : "false");
+        res.put(PARAM_APP_URL, GWT.getHostPageBaseURL());
 
+        String prefix = client.getAppUri();
+        if (prefix == null) {
+            prefix = "";
+        }
+        res.put(PARAM_ACTION_URL, GWT.getHostPageBaseURL() + action.substring(prefix.length()));
         return res;
     }
 
