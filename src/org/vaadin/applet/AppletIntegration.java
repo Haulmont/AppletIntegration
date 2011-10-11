@@ -8,8 +8,10 @@ import java.util.Map;
 import org.vaadin.applet.client.ui.VAppletIntegration;
 
 import com.vaadin.Application;
+import com.vaadin.service.ApplicationContext;
 import com.vaadin.terminal.PaintException;
 import com.vaadin.terminal.PaintTarget;
+import com.vaadin.terminal.gwt.server.PortletApplicationContext;
 import com.vaadin.terminal.gwt.server.WebApplicationContext;
 import com.vaadin.ui.AbstractComponent;
 
@@ -94,10 +96,11 @@ public class AppletIntegration extends AbstractComponent {
     protected String getHttpSessionId() {
         Application app = getApplication();
         if (app != null) {
-            WebApplicationContext ctx = ((WebApplicationContext) app
-                    .getContext());
-            if (ctx != null) {
-                return ctx.getHttpSession().getId();
+            ApplicationContext ctx = app.getContext();
+            if (ctx instanceof WebApplicationContext) {
+                return ((WebApplicationContext)ctx).getHttpSession().getId();
+            } else if (ctx instanceof PortletApplicationContext) {
+                return ((PortletApplicationContext)ctx).getHttpSession().getId();
             }
         }
         return null;
