@@ -103,7 +103,7 @@ public class AppletIntegration extends AbstractComponent {
                 return ((PortletApplicationContext)ctx).getHttpSession().getId();
             }
         }
-        return null;
+        return "";
     }
 
     /**
