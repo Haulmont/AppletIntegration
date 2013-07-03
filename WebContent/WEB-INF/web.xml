@@ -15,7 +15,7 @@
   		<description>
   		Vaadin application class to start</description>
   		<param-name>application</param-name>
-  		<param-value>org.vaadin.applet.sample.AppletIntegrationSampleApplication</param-value>
+  		<param-value>org.vaadin.applet.sample.AppletIntegrationSampleUI</param-value>
   	</init-param>
   	<init-param>
   		<description>

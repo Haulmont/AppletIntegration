@@ -5,8 +5,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Locale;
 
-import com.vaadin.terminal.StreamVariable;
-
 /**
  * This class can be used as base to implement Java Applets that integrate to
  * Vaadin application.
@@ -78,7 +76,7 @@ public abstract class AbstractVaadinApplet extends Applet {
      * Submit actionUrl can be used to post multipart data
      * back to the Vaadin server-side application.
      *
-     * Note: This is not by the AppletIntegration automatically. It must be subclassed and a variable named "actionUrl" must be added to paintContent pointing to the {@link StreamVariable}.
+     * Note: This is not by the AppletIntegration automatically. It must be subclassed and a variable named "actionUrl" must be added to paintContent pointing to the {@link com.vaadin.server.StreamVariable}.
      *
      * @return
      */
@@ -89,7 +87,7 @@ public abstract class AbstractVaadinApplet extends Applet {
     /**
      * Set the id of the applet in DOM.
      *
-     * @param paintableId
+     * @param appletId
      */
     private void setAppletId(String appletId) {
         this.appletId = appletId;
@@ -128,7 +126,7 @@ public abstract class AbstractVaadinApplet extends Applet {
     /**
      * Set the application session cookie. Called from init.
      *
-     * @param appUrl
+     * @param appSessionCookie
      */
     private void setApplicationSessionCookie(String appSessionCookie) {
         sessionCookie = appSessionCookie;
@@ -488,7 +486,6 @@ public abstract class AbstractVaadinApplet extends Applet {
      * second thread (with applet's permission) to execute the command.
      *
      * @param command
-     * @param params
      */
     public void execute(String command) {
         execute(command, null);

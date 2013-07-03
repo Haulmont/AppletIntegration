@@ -1,25 +1,21 @@
 package org.vaadin.applet;
 
+import com.vaadin.server.PaintException;
+import com.vaadin.server.PaintTarget;
+import com.vaadin.server.VaadinSession;
+import com.vaadin.ui.AbstractComponent;
+import com.vaadin.ui.LegacyComponent;
+import org.vaadin.applet.client.ui.VAppletIntegration;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.vaadin.applet.client.ui.VAppletIntegration;
-
-import com.vaadin.Application;
-import com.vaadin.service.ApplicationContext;
-import com.vaadin.terminal.PaintException;
-import com.vaadin.terminal.PaintTarget;
-import com.vaadin.terminal.gwt.server.PortletApplicationContext;
-import com.vaadin.terminal.gwt.server.WebApplicationContext;
-import com.vaadin.ui.AbstractComponent;
-
 /**
  * Server side component for the VAppletIntegration widget.
  */
-@com.vaadin.ui.ClientWidget(org.vaadin.applet.client.ui.VAppletIntegration.class)
-public class AppletIntegration extends AbstractComponent {
+public class AppletIntegration extends AbstractComponent implements LegacyComponent {
 
     private static final long serialVersionUID = 6061722679712017720L;
 
@@ -34,7 +30,6 @@ public class AppletIntegration extends AbstractComponent {
 
     @Override
     public void paintContent(PaintTarget target) throws PaintException {
-        super.paintContent(target);
 
         // Applet class
         if (appletClass == null) {
@@ -94,16 +89,7 @@ public class AppletIntegration extends AbstractComponent {
      * @return
      */
     protected String getHttpSessionId() {
-        Application app = getApplication();
-        if (app != null) {
-            ApplicationContext ctx = app.getContext();
-            if (ctx instanceof WebApplicationContext) {
-                return ((WebApplicationContext)ctx).getHttpSession().getId();
-            } else if (ctx instanceof PortletApplicationContext) {
-                return ((PortletApplicationContext)ctx).getHttpSession().getId();
-            }
-        }
-        return "";
+        return VaadinSession.getCurrent().getSession().getId();
     }
 
     /**
@@ -146,8 +132,6 @@ public class AppletIntegration extends AbstractComponent {
      *
      * This method is protected so that overriding classes can publish it if
      * needed.
-     *
-     * @param appletClass
      */
     protected String getAppletClass() {
         return appletClass;
@@ -159,7 +143,7 @@ public class AppletIntegration extends AbstractComponent {
      * This method is protected so that overriding classes can publish it if
      * needed.
      *
-     * @param appletClass
+     * @param appletArchives
      */
     protected void setAppletArchives(List<String> appletArchives) {
         this.appletArchives = appletArchives;
@@ -170,8 +154,6 @@ public class AppletIntegration extends AbstractComponent {
      *
      * This method is protected so that overriding classes can publish it if
      * needed.
-     *
-     * @param appletClass
      */
     protected List<String> getAppletArchives() {
         return appletArchives;
@@ -213,8 +195,6 @@ public class AppletIntegration extends AbstractComponent {
      *
      * This method is protected so that overriding classes can publish it if
      * needed.
-     *
-     * @param appletClass
      */
     protected Map<String, String> getAppletParams() {
         return Collections.unmodifiableMap(appletParams);
@@ -270,4 +250,8 @@ public class AppletIntegration extends AbstractComponent {
         return name;
     }
 
+    @Override
+    public void changeVariables(Object o, Map<String, Object> stringObjectMap) {
+
+    }
 }

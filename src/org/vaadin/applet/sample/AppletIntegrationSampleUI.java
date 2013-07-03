@@ -2,21 +2,16 @@ package org.vaadin.applet.sample;
 
 import java.util.Arrays;
 
+import com.vaadin.server.VaadinRequest;
+import com.vaadin.ui.UI;
 import org.vaadin.applet.AppletIntegration;
 
-import com.vaadin.Application;
-import com.vaadin.ui.Window;
-
-public class AppletIntegrationSampleApplication extends Application {
+public class AppletIntegrationSampleUI extends UI {
 
     private static final long serialVersionUID = 8738850341513839745L;
 
     @Override
-    public void init() {
-
-        Window mainWindow = new Window("Applettest Application");
-        setMainWindow(mainWindow);
-
+    protected void init(VaadinRequest request) {
         AppletIntegration applet = new AppletIntegration() {
 
             private static final long serialVersionUID = 1L;
@@ -32,7 +27,6 @@ public class AppletIntegrationSampleApplication extends Application {
 
             }
         };
-        mainWindow.addComponent(applet);
+        setContent(applet);
     }
-
 }

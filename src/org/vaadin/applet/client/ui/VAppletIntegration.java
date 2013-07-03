@@ -1,20 +1,11 @@
 package org.vaadin.applet.client.ui;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.ui.HTML;
-import com.vaadin.terminal.gwt.client.ApplicationConfiguration;
-import com.vaadin.terminal.gwt.client.ApplicationConnection;
-import com.vaadin.terminal.gwt.client.Paintable;
-import com.vaadin.terminal.gwt.client.UIDL;
-import com.vaadin.terminal.gwt.client.VConsole;
-import com.vaadin.terminal.gwt.client.ValueMap;
+import com.vaadin.client.*;
+
+import java.util.*;
 
 /**
  * Client side applet integration widget which communicates with the server.
@@ -207,16 +198,16 @@ public class VAppletIntegration extends HTML implements Paintable {
             ApplicationConnection client) /*-{
                                           var c = client;
                                           $wnd.vaadin.appletUpdateBooleanVariable = function(pid, variableName, newValue, immediate) {
-                                          c.@com.vaadin.terminal.gwt.client.ApplicationConnection::updateVariable(Ljava/lang/String;Ljava/lang/String;ZZ)(pid, variableName, newValue, immediate);
+                                          c.@com.vaadin.client.ApplicationConnection::updateVariable(Ljava/lang/String;Ljava/lang/String;ZZ)(pid, variableName, newValue, immediate);
                                           };
                                           $wnd.vaadin.appletUpdateIntVariable = function(pid, variableName, newValue, immediate) {
-                                          c.@com.vaadin.terminal.gwt.client.ApplicationConnection::updateVariable(Ljava/lang/String;Ljava/lang/String;IZ)(pid, variableName, newValue, immediate);
+                                          c.@com.vaadin.client.ApplicationConnection::updateVariable(Ljava/lang/String;Ljava/lang/String;IZ)(pid, variableName, newValue, immediate);
                                           };
                                           $wnd.vaadin.appletUpdateDoubleVariable = function(pid, variableName, newValue, immediate) {
-                                          c.@com.vaadin.terminal.gwt.client.ApplicationConnection::updateVariable(Ljava/lang/String;Ljava/lang/String;DZ)(pid, variableName, newValue, immediate);
+                                          c.@com.vaadin.client.ApplicationConnection::updateVariable(Ljava/lang/String;Ljava/lang/String;DZ)(pid, variableName, newValue, immediate);
                                           };
                                           $wnd.vaadin.appletUpdateStringVariable = function(pid, variableName, newValue, immediate) {
-                                          c.@com.vaadin.terminal.gwt.client.ApplicationConnection::updateVariable(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)(pid, variableName, newValue, immediate);
+                                          c.@com.vaadin.client.ApplicationConnection::updateVariable(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)(pid, variableName, newValue, immediate);
                                           };
                                           }-*/;
 
@@ -420,12 +411,11 @@ public class VAppletIntegration extends HTML implements Paintable {
                 ApplicationConfiguration.isDebugMode() ? "true" : "false");
         res.put(PARAM_APP_URL, GWT.getHostPageBaseURL());
 
-        String prefix = client.getAppUri();
+        String prefix = client.getConfiguration().getServiceUrl();
         if (prefix == null) {
             prefix = "";
         }
         res.put(PARAM_ACTION_URL, GWT.getHostPageBaseURL() + action.substring(prefix.length()));
         return res;
     }
-
 }
