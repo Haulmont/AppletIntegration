@@ -84,6 +84,7 @@ public class VAppletIntegration extends HTML implements Paintable {
     /**
      * Called whenever an update is received from the server
      */
+    @Override
     public void updateFromUIDL(UIDL uidl, ApplicationConnection client) {
         // This call should be made first.
         // It handles sizes, captions, tooltips, etc. automatically.
@@ -142,19 +143,6 @@ public class VAppletIntegration extends HTML implements Paintable {
             // Allow overriding of the default codebase
             if (uidl.hasAttribute(ATTR_APPLET_CODEBASE)) {
                 codebase = uidl.getStringAttribute(ATTR_APPLET_CODEBASE);
-            }
-
-            // Width and height if provided
-            if (uidl.hasAttribute("width")) {
-                setWidth(uidl.getStringAttribute("width"));
-            } else {
-                setWidth("0");
-            }
-
-            if (uidl.hasAttribute("height")) {
-                setHeight(uidl.getStringAttribute("height"));
-            } else {
-                setHeight("0");
             }
 
             if (uidl.hasVariable(ATTR_APPLET_ACTION)) {

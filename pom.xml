@@ -5,7 +5,7 @@
     <groupId>com.haulmont.thirdparty</groupId>
     <artifactId>appletintegration</artifactId>
     <packaging>jar</packaging>
-    <version>1.2.9</version>
+    <version>1.2.10</version>
     <name>Vaadin AppletIntegration Addon</name>
 
     <properties>
@@ -47,11 +47,13 @@
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-server</artifactId>
             <version>${vaadin.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-client-compiled</artifactId>
             <version>${vaadin.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>
@@ -63,6 +65,7 @@
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-themes</artifactId>
             <version>${vaadin.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -156,6 +159,7 @@
             <plugin>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>maven-jetty-plugin</artifactId>
+                <version>6.1.26</version>
                 <configuration>
                     <webAppSourceDirectory>${basedir}/WebContent</webAppSourceDirectory>
                     <webAppConfig>
